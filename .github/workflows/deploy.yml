@@ -1,101 +1,44 @@
-name: Deployment Pipeline
+name: Vercel Deployment
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
 
-env:
-  NODE_VERSION: '18.x'
-
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    outputs:
-      ready-to-deploy: ${{ steps.deploy-check.outputs.success }}
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-    
-    - name: Check for package.json
-      id: package-check
-      run: |
-        if [ -f "package.json" ]; then
-          echo "exists=true" >> $GITHUB_OUTPUT
-        else
-          echo "exists=false" >> $GITHUB_OUTPUT
-        fi
-    
-    - name: Initialize project if needed
-      if: steps.package-check.outputs.exists == 'false'
-      run: |
-        npm init -y
-        echo "Initialized project with package.json"
-    
-    - name: Install dependencies
-      if: steps.package-check.outputs.exists == 'true'
-      run: |
-        if [ -f "package-lock.json" ]; then
-          npm ci
-        else
-          npm install
-        fi
-    
-    - name: Run tests
-      run: |
-        if [ -f "package.json" ]; then
-          npm test || echo "Tests completed"
-          echo "success=true" >> $GITHUB_OUTPUT
-        else
-          echo "success=true" >> $GITHUB_OUTPUT
-        fi
-      id: deploy-check
-    
-    - name: Build application
-      run: |
-        if [ -f "package.json" ]; then
-          npm run build || echo "No build script found"
-        else
-          echo "No build step required"
-        fi
-    
-    - name: Create deployment artifact
-      run: |
-        mkdir -p dist
-        echo "Deployment ready at $(date)" > dist/deployment.txt
-        find . -maxdepth 1 -type f -name "*.json" -o -name "*.md" -o -name "*.js" | head -10 >> dist/deployment.txt
-
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-output
-        path: dist/
-
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-test
-    if: needs.build-and-test.outputs.ready-to-deploy == 'true'
+    name: Deploy to Vercel
     
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Download build artifacts
-      uses: actions/download-artifact@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: ⚙️ Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        name: build-output
-    
-    - name: Simulate deployment
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests
+      run: npm test
+      
+    - name: Build project
+      run: npm run build
+      
+    - name: Install Vercel CLI
+      run: npm install --global vercel@latest
+      
+    - name: Deploy to Vercel
       run: |
-        echo "Deploying application..."
-        echo "Build artifacts:"
-        ls -la dist/ || echo "No dist directory"
-        echo "Deployment to hosting platform simulated successfully"
-        echo "Application would be deployed to Heroku/AWS/Azure here"
-    
-    - name: Notify deployment
-      run: echo "Application deployed successfully at $(date)"
+        vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --confirm
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        
+    - name: Deployment Status
+      run: |
+        echo "✅ Vercel deployment completed successfully"
+        echo "Your app is now live on Vercel"
