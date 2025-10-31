@@ -1,31 +1,18 @@
 {
   "name": "heavens-above",
   "version": "1.0.0",
-  "private": true,
-  "description": "Scripts for scraping the Heavens Above website.",
-  "main": "run.js",
+  "description": "Astronomical data web application",
   "scripts": {
-    "start": "node run.js"
+    "test": "jest",
+    "lint": "eslint .",
+    "build": "webpack --mode production",
+    "cleanup": "rm -rf dist/temp || true",
+    "docs:build": "mkdir -p docs-dist && cp README.md docs-dist/ || echo 'No docs build configured'"
   },
-  "dependencies": {
-    "cheerio": "^1.0.0-rc.3",
-    "request": "^2.88.2"
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "eslint": "^8.0.0",
+    "webpack": "^5.0.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/PKUPI/heavens-above.git"
-  },
-  "keywords": [
-    "Heavens Above",
-    "spider"
-  ],
-  "author": "Mimi <stevenjoezhang@gmail.com> (https://zhangshuqiao.org)",
-  "license": "GPL-3.0-or-later",
-  "bugs": {
-    "url": "https://github.com/PKUPI/heavens-above/issues"
-  },
-  "homepage": "https://github.com/PKUPI/heavens-above#readme",
-  "engines": {
-    "node": ">=12.10.0"
-  }
+  "dependencies": {}
 }

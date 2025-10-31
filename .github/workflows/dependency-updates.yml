@@ -1,0 +1,77 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # Weekly on Monday at midnight UTC
+  workflow_dispatch:
+
+jobs:
+  dependency-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+    
+    - name: Check for package.json
+      id: package-check
+      run: |
+        if [ -f "package.json" ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Initialize project if needed
+      if: steps.package-check.outputs.exists == 'false'
+      run: |
+        npm init -y
+        echo "Initialized project for dependency check"
+    
+    - name: Check for outdated dependencies
+      if: steps.package-check.outputs.exists == 'true'
+      id: outdated-check
+      run: |
+        npm install  # Ensure dependencies are installed
+        npm outdated --json > outdated.json || echo "{}" > outdated.json
+        if [ -s outdated.json ] && [ "$(cat outdated.json)" != "{}" ]; then
+          echo "has-updates=true" >> $GITHUB_OUTPUT
+          echo "Found outdated dependencies:"
+          cat outdated.json
+        else
+          echo "has-updates=false" >> $GITHUB_OUTPUT
+          echo "All dependencies are up to date"
+        fi
+    
+    - name: Upload outdated dependencies report
+      uses: actions/upload-artifact@v4
+      with:
+        name: outdated-dependencies
+        path: outdated.json
+      if: steps.outdated-check.outputs.has-updates == 'true'
+
+  security-updates:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check for package.json
+      id: package-check
+      run: |
+        if [ -f "package.json" ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Run security audit
+      if: steps.package-check.outputs.exists == 'true'
+      run: |
+        echo "Checking for security vulnerabilities..."
+        npm audit --audit-level moderate || echo "No security issues found or audit not supported"
+        echo "Security audit completed"

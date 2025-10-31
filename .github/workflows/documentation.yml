@@ -1,0 +1,106 @@
+name: Documentation Deployment
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - '*.md'
+      - 'README.md'
+  workflow_dispatch:
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Build documentation
+      run: |
+        echo "🚀 Building documentation site..."
+        
+        # Create site directory
+        mkdir -p _site
+        
+        # Create simple documentation
+        cat > _site/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>heavens-above Documentation</title>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+                .container { max-width: 800px; margin: 0 auto; }
+                header { border-bottom: 2px solid #0366d6; padding-bottom: 20px; }
+                h1 { color: #0366d6; }
+                .file-list { background: #f6f8fa; padding: 20px; border-radius: 6px; margin: 20px 0; }
+                .file-item { padding: 8px 0; }
+                .timestamp { color: #586069; font-size: 14px; margin-top: 30px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <header>
+                    <h1>📚 heavens-above Documentation</h1>
+                    <p>Project documentation and resources</p>
+                </header>
+                
+                <div class="file-list">
+                    <h3>Available Documents:</h3>
+        EOF
+        
+        # Add markdown files
+        for file in *.md; do
+          if [ -f "$file" ]; then
+            echo "<div class='file-item'>📄 <a href='$file'>$file</a></div>" >> _site/index.html
+            cp "$file" _site/
+          fi
+        done
+        
+        # Copy docs folder if exists
+        if [ -d "docs" ]; then
+          echo "<div class='file-item'>📁 <a href='docs/'>docs/</a> (documentation folder)</div>" >> _site/index.html
+          cp -r docs _site/
+        fi
+        
+        # Close HTML
+        cat >> _site/index.html << EOF
+                </div>
+                
+                <div class="timestamp">
+                    <p>Last updated: $(date)</p>
+                    <p>Built with GitHub Actions</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        EOF
+        
+        echo "✅ Documentation built successfully!"
+        ls -la _site/
+    
+    - name: Setup GitHub Pages
+      uses: actions/configure-pages@v4
+    
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./_site
+    
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+    
+    - name: Success message
+      run: |
+        echo "🎉 Documentation deployed to GitHub Pages!"
+        echo "📖 Visit: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
