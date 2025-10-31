@@ -9,6 +9,8 @@
     "cleanup": "echo 'Cleaning up...' && rm -rf dist/temp || true",
     "dev": "echo 'Run locally: python3 -m http.server 3000'"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "vercel": "^28.0.0"
+  },
   "dependencies": {}
 }

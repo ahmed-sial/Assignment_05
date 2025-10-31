@@ -127,6 +127,7 @@ const htmlContent = `<!DOCTYPE html>
             <h3>🚀 Successfully Deployed on Vercel!</h3>
             <p>This application has been automatically deployed using GitHub Actions and Vercel.</p>
             <p><strong>Deployment Time:</strong> <span id="deployment-time"></span></p>
+            <p><strong>Build Version:</strong> 1.0.0</p>
         </div>
         
         <div class="footer">
@@ -136,10 +137,39 @@ const htmlContent = `<!DOCTYPE html>
 
     <script>
         document.getElementById('deployment-time').textContent = new Date().toLocaleString();
+        console.log('Heavens Above - Astronomical Data Application');
     </script>
 </body>
 </html>`;
 
 // Write HTML file
 fs.writeFileSync(path.join(distDir, 'index.html'), htmlContent);
+
+// Create a simple 404 page
+const notFoundHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Page Not Found - Heavens Above</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px;
+            background: linear-gradient(135deg, #0c0c2e, #1a1a4a);
+            color: white;
+        }
+        h1 { color: #ff6b6b; }
+        a { color: #4ecdc4; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>404 - Page Not Found</h1>
+    <p>The page you're looking for doesn't exist.</p>
+    <a href="/">Return to Homepage</a>
+</body>
+</html>`;
+
+fs.writeFileSync(path.join(distDir, '404.html'), notFoundHtml);
+
 console.log('✅ Build completed successfully!');
+console.log('📁 Files generated: index.html, 404.html');

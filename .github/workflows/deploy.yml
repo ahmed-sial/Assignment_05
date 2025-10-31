@@ -1,4 +1,4 @@
-name: Vercel Deployment
+name:  Vercel Deployment
 
 on:
   push:
@@ -8,10 +8,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    name: Deploy to Vercel
+    name:  Deploy to Vercel
     
     steps:
-    - name: Checkout code
+    - name:  Checkout code
       uses: actions/checkout@v4
       
     - name: ⚙️ Setup Node.js
@@ -20,25 +20,34 @@ jobs:
         node-version: '18'
         cache: 'npm'
         
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run tests
+    - name:  Install dependencies and generate lock file
+      run: |
+        npm install
+        ls -la | grep package-lock.json
+        echo "Lock file generated successfully"
+        
+    - name:  Run tests
       run: npm test
       
-    - name: Build project
+    - name:  Build project
       run: npm run build
       
-    - name: Install Vercel CLI
-      run: npm install --global vercel@latest
+    - name: ✅ Verify build output
+      run: |
+        echo "Build verification:"
+        ls -la dist/
+        echo "Build files created successfully"
       
-    - name: Deploy to Vercel
+    - name:  Install Vercel CLI
+      run: npm install -g vercel@latest
+      
+    - name:  Deploy to Vercel
       run: |
         vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --confirm
       env:
         VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         
-    - name: Deployment Status
+    - name:  Deployment Status
       run: |
         echo "✅ Vercel deployment completed successfully"
-        echo "Your app is now live on Vercel"
+        echo " Your app is now live on Vercel"
